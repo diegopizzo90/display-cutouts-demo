@@ -1,14 +1,12 @@
 package com.diegopizzo.display_cutouts_demo
 
+import android.graphics.Rect
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.*
 import com.diegopizzo.display_cutouts_demo.databinding.ActivityMainBinding
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -18,8 +16,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         hideSystemBars()
         binding = ActivityMainBinding.inflate(layoutInflater)
-        renderViewComponents()
         setContentView(binding.root)
+        setButtonClickListener()
+    }
+
+    private fun setButtonClickListener() {
+        binding.btn.apply {
+            setOnClickListener {
+                renderViewComponents()
+                isEnabled = false
+                it.requestApplyInsets()
+            }
+        }
     }
 
     private fun hideSystemBars() {
@@ -40,12 +48,27 @@ class MainActivity : AppCompatActivity() {
             //Pass rect list information in order to draw rectangles around cutouts
             binding.cutoutsBorder.rectList = cutouts?.boundingRects
 
-            //Get the top cutouts height and apply it into layout params for circle view component repositioning
-            val insetTop = cutouts?.safeInsetTop
-            val params = binding.componentView.layoutParams as ConstraintLayout.LayoutParams
-            params.topMargin = insetTop ?: 0
-            binding.componentView.layoutParams = params
+            //Check if cutouts intercept view component
+            if (isCutoutsIntersectView(cutouts, binding.componentView)) {
+                startViewRepositioning(cutouts)
+            }
             windowInsetsCompat
         }
+    }
+
+    private fun startViewRepositioning(cutouts: DisplayCutoutCompat?) {
+        //Change the position of view component
+        val insetTop = cutouts?.safeInsetTop
+        val params = binding.componentView.layoutParams as ConstraintLayout.LayoutParams
+        params.topMargin = insetTop ?: 0
+        binding.componentView.layoutParams = params
+    }
+
+    private fun isCutoutsIntersectView(cutouts: DisplayCutoutCompat?, view: View): Boolean {
+        return cutouts?.boundingRects?.any { cutoutRect ->
+            val viewRect = Rect()
+            view.getHitRect(viewRect)
+            cutoutRect.intersect(viewRect)
+        } ?: false
     }
 }
