@@ -14,10 +14,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        hideSystemBars()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setButtonClickListener()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        hideSystemBars()
     }
 
     private fun setButtonClickListener() {
